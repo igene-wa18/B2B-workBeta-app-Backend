@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
 const Expense = require('../models/Expense');
 const User = require('../models/User');
 const Department = require('../models/Department');
 const Notification = require('../models/Notification');
+const cloudinary = require('../utils/cloudinary');
 const { protect, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
@@ -11,7 +13,22 @@ const upload = require('../middleware/upload');
 router.post('/', protect, requireRole('manager', 'employee'), upload.single('receipt'), async (req, res) => {
     try {
         const { amount, category, description } = req.body;
-        const receipt_url = req.file ? `/uploads/${req.file.filename}` : '';
+        
+        let receipt_url = '';
+        if (req.file) {
+            const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                folder: 'worksync_receipts'
+            });
+            receipt_url = uploadResult.secure_url;
+            
+            // Delete local temporary file
+            try {
+                fs.unlinkSync(req.file.path);
+            } catch (err) {
+                console.error('Failed to delete temp file:', err);
+            }
+        }
+
         const expense = await Expense.create({ manager_id: req.user._id, amount, category, description, receipt_url });
 
         // Trigger notifications for department head or admins
