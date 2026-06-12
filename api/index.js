@@ -55,8 +55,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message || 'Internal server error' });
 });
 
-// Connect DB and export app for Vercel
-const Port = process.env.PORT || 5000;
+// Connect DB and start server
+const port = process.env.PORT || 5000;
+
 connectDB()
     .then(() => {
         app.listen(port, () => {
@@ -64,6 +65,8 @@ connectDB()
         });
     })
     .catch((err) => {
-        console.error('Database connection error:', err);
+        console.error('Failed to connect to the database:', err.message);
+        process.exit(1);
     });
+
 
