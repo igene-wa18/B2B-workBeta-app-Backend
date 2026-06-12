@@ -57,7 +57,7 @@ app.use((err, req, res, next) => {
 
 // Connect DB and export app for Vercel
 const Port = process.env.PORT || 5000;
-connectDb()
+connectDB()
     .then(() => {
         app.listen(port, () => {
             console.log(`Server running on port ${port}`);
